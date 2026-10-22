@@ -1,0 +1,18 @@
+#!/sbin/sh
+# ============================================================
+#  Magisk / KernelSU / APatch 模块安装入口
+#  由管理器调用，环境变量：MODPATH TMPDIR ZIPFILE ARCH API BOOTMODE KSU APATCH
+# ============================================================
+umask 022
+
+OUTFD=$2
+ZIPFILE=$3
+[ -n "$OUTFD" ] && [ -n "$ZIPFILE" ] || { echo "! 参数错误" >&2; exit 1; }
+
+unzip -o "$ZIPFILE" -d "$TMPDIR" >/dev/null 2>&1 || { echo "! 解压失败" >&2; exit 1; }
+
+[ -f "$TMPDIR/customize.sh" ] || { echo "! 缺少 customize.sh" >&2; exit 1; }
+
+. "$TMPDIR/customize.sh"
+
+exit 0

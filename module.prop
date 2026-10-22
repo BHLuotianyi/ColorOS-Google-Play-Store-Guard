@@ -1,0 +1,6 @@
+id=coloros_gplaystore_guard
+name=ColorOS Google Play Store Guard
+version=1.0.0
+versionCode=1
+author=BHLuotianyi
+description=阻止国行版ColorOS在软重启后Google Play Store消失；带 Play Store 兜底重装。测试于：一加13/ColorOS 17.0.0.103(CN01)
