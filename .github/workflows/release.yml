@@ -4,12 +4,6 @@ on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Tag to publish (e.g. v1.0.0)'
-        required: true
-        default: 'v1.0.0'
 
 permissions:
   contents: write
@@ -20,15 +14,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Attach dist ZIP to release
-        uses: softprops/action-gh-release@v2
+      - name: Build module ZIP
+        id: build
+        run: echo "zip=$(sh build.sh | head -1)" >> "$GITHUB_OUTPUT"
+
+      - name: Publish immutable release
+        uses: KernelSU-Modules/tools/actions/module-release@b6d340ddcd562ad482568b6e66b8d7a9c34d645e
         with:
-          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
-          name: ${{ github.event.inputs.tag || github.ref_name }}
-          body: |
-            - 拦截 `persist.sys.boot_monitor.mode=pms_restore`，`boot_monitor_service` 保持运行
-            - 系统底包覆盖 + Play Store 兜底重装
-            - 安装时检测不到可用 Play Store 会直接失败
-            - 测试于 一加13 / ColorOS 17.0.0.103(CN01)
-          files: dist/*.zip
-          fail_on_unmatched_files: true
+          zip: ${{ steps.build.outputs.zip }}
+          generate-release-notes: true

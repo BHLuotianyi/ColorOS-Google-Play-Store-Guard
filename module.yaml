@@ -1,0 +1,9 @@
+schemaVersion: 1
+id: coloros_gplaystore_guard
+name: ColorOS Google Play Store Guard
+summary: 阻止国行版 ColorOS 在软重启后移除 Google Play Store，并带兜底重装。
+description: README.md
+license: MIT
+homepage: https://github.com/BHLuotianyi/ColorOS-Google-Play-Store-Guard
+support: https://github.com/BHLuotianyi/ColorOS-Google-Play-Store-Guard/issues
+tags: [system, coloros, google-play]

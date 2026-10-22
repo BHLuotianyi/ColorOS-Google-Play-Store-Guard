@@ -8,7 +8,12 @@ OUT="dist/${NAME}-v${VER}.zip"
 
 mkdir -p dist
 rm -f "$OUT"
-zip -qr "$OUT" . -x 'dist/*' -x '.git/*' -x 'build.sh'
+zip -qr "$OUT" . \
+    -x 'dist/*' \
+    -x '.git/*' \
+    -x '.github/*' \
+    -x 'build.sh' \
+    -x 'module.yaml'
 
 echo "$OUT"
 sha256sum "$OUT" 2>/dev/null || true

@@ -1,53 +1,25 @@
+<p align="center"><a href="README_EN.md">English</a> | <strong>简体中文</strong></p>
+
 > **本仓库完全由 AI 生成与测试。**
 
-# ColorOS Google Play Store Guard
+# ColorOS 谷歌商店防重置 / ColorOS Google Play Store Guard
+
+<p align="center">
+  <a href="https://github.com/BHLuotianyi/ColorOS-Google-Play-Store-Guard/releases/latest"><img alt="release" src="https://img.shields.io/github/v/release/BHLuotianyi/ColorOS-Google-Play-Store-Guard?label=release&style=flat-square"></a>
+  <img alt="last commit" src="https://img.shields.io/github/last-commit/BHLuotianyi/ColorOS-Google-Play-Store-Guard?style=flat-square">
+  <a href="LICENSE"><img alt="license" src="https://img.shields.io/github/license/BHLuotianyi/ColorOS-Google-Play-Store-Guard?style=flat-square"></a>
+  <img alt="root" src="https://img.shields.io/badge/root-KernelSU%20%7C%20KernelSU--Next%20%7C%20Magisk%20%7C%20APatch-blue?style=flat-square">
+</p>
 
 - **作者**：BHLuotianyi
-- **版本**：1.0.0
 - **测试于**：一加 13 / ColorOS 17.0.0.103(CN01)
-- **适用**：存在 `boot_monitor_service` 与 `persist.sys.boot_monitor.mode` 的国行 ColorOS / OPPO / OnePlus
-- **Root**：KernelSU / KernelSU-Next / Magisk / APatch
+- **适用**：存在 `boot_monitor_service` 与 `persist.sys.boot_monitor.mode` 的国行 ColorOS
 
 ## 下载
 
-- [dist/ColorOS-Google-Play-Store-Guard-v1.0.0.zip](dist/ColorOS-Google-Play-Store-Guard-v1.0.0.zip)
+[![Downloads](https://img.shields.io/github/downloads/BHLuotianyi/ColorOS-Google-Play-Store-Guard/total?style=flat-square)](https://github.com/BHLuotianyi/ColorOS-Google-Play-Store-Guard/releases)
 
-## 问题
-
-ColorOS 在判定「启动异常」（常见于软重启 / framework 重启）后，`boot_monitor_service` 会写入：
-
-```
-persist.sys.boot_monitor.mode = pms_restore
-```
-
-PackageManagerService 读到该值后进入 **special safe mode**，把 `com.android.vending` 从 /data 的更新版本回滚到：
-
-```
-/product/priv-app/GooglePlayServicesUpdater/GooglePlayServicesUpdater.apk   （约 25 KB 的系统桩）
-```
-
-结果：桌面 Google Play 图标消失，依赖 Google Play 环境的银行/钱包类应用会报「缺少 Google Play 环境」。
-
-## 拦截的是什么信号
-
-**只拦截 `persist.sys.boot_monitor.mode=pms_restore` 这一个信号。**
-
-- `boot_monitor_service` **不停用、不禁用**；
-- 它的其它救援阶梯（SS / SystemUI / Launcher loop、opex、recovery 等）不受影响；
-- 常驻 watcher 每 0.1 秒检查一次该属性，发现 `pms_restore` 立即清空，使 PMS 不会进入 safe mode。
-
-## 它做什么
-
-1. **信号拦截（主逻辑）**
-   见上。软重启后 PMS 读到的 mode 为空，不再回滚系统应用。
-
-2. **系统底包兜底（可选）**
-   安装时抓取当前可用的 Play Store APK（必须 >10MB，自动跳过 25KB 系统桩），之后把它 bind-mount 到系统桩路径，并遮蔽给旧桩编译的 `oat` 目录。
-   即使某次拦截失败、PMS 进入 safe mode，回滚目标也是同一个可用版本的 Play Store。
-   源文件放在 `/data/local/tmp`：KSU 会把 `/data/adb` 来源的挂载从 app namespace 隐藏，直接用 `/data/adb` 做源会导致 app 端仍看到 25KB 桩。
-
-3. **兜底重装**
-   守护进程每 10 秒检查 `versionCode`；低于已保存版本或包被移除时，用保存的 APK `pm install -r`（保留数据）。
+从 [Releases](https://github.com/BHLuotianyi/ColorOS-Google-Play-Store-Guard/releases/latest) 下载最新的 `ColorOS-Google-Play-Store-Guard-v*.zip`。
 
 ## 安装前置条件（重要）
 
@@ -76,6 +48,43 @@ versionCode                      → 必须可读
 2. 在 KernelSU / Magisk / APatch 管理器中刷入本模块 ZIP。
 3. 安装器会保存当前 Play Store APK 到 `/data/adb/playstore/base.apk`。
 4. 无需重启即可生效；重启后由 `post-fs-data.sh` / `service.sh` 自动恢复。
+
+## 问题
+
+ColorOS 在判定「启动异常」（常见于软重启 / framework 重启）后，`boot_monitor_service` 会写入：
+
+```
+persist.sys.boot_monitor.mode = pms_restore
+```
+
+PackageManagerService 读到该值后进入 **special safe mode**，把 `com.android.vending` 从 /data 的更新版本回滚到：
+
+```
+/product/priv-app/GooglePlayServicesUpdater/GooglePlayServicesUpdater.apk   （约 25 KB 的系统桩）
+```
+
+结果：桌面 Google Play 图标消失，依赖 Google Play 环境的一些应用会报「缺少 Google Play 环境」。
+
+## 拦截的是什么信号
+
+**只拦截 `persist.sys.boot_monitor.mode=pms_restore` 这一个信号。**
+
+- `boot_monitor_service` **不停用、不禁用**；
+- 它的其它救援阶梯（SS / SystemUI / Launcher loop、opex、recovery 等）不受影响；
+- 常驻 watcher 每 0.1 秒检查一次该属性，发现 `pms_restore` 立即清空，使 PMS 不会进入 safe mode。
+
+## 它做什么
+
+1. **信号拦截（主逻辑）**
+   见上。软重启后 PMS 读到的 mode 为空，不再回滚系统应用。
+
+2. **系统底包兜底（可选）**
+   安装时抓取当前可用的 Play Store APK（必须 >10MB，自动跳过 25KB 系统桩），之后把它 bind-mount 到系统桩路径，并遮蔽给旧桩编译的 `oat` 目录。
+   即使某次拦截失败、PMS 进入 safe mode，回滚目标也是同一个可用版本的 Play Store。
+   源文件放在 `/data/local/tmp`：KSU 会把 `/data/adb` 来源的挂载从 app namespace 隐藏，直接用 `/data/adb` 做源会导致 app 端仍看到 25KB 桩。
+
+3. **兜底重装**
+   守护进程每 10 秒检查 `versionCode`；低于已保存版本或包被移除时，用保存的 APK `pm install -r`（保留数据）。
 
 ## 日常使用
 
